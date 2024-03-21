@@ -1,18 +1,23 @@
 <?php
+defined('ABSPATH') || die;
 
 /*
 Plugin Name: WPU htaccess Protect
 Plugin URI: https://github.com/WordPressUtilities/wpuhtaccessprotect
+Update URI: https://github.com/WordPressUtilities/wpuhtaccessprotect
 Description: Replicate htaccess admin protection on some files
-Version: 0.1.2
+Version: 0.2.0
 Author: Darklg
 Author URI: https://darklg.me/
+Text Domain: wpuhtaccessprotect
+Requires at least: 6.2
+Requires PHP: 8.0
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
 
 class wpuhtaccessprotect {
-    private $plugin_version = '0.1.2';
+    private $plugin_version = '0.2.0';
     private $htpasswd_path = false;
     private $htaccess_authname = false;
     private $protected_files = array(
@@ -81,3 +86,37 @@ class wpuhtaccessprotect {
 }
 
 $wpuhtaccessprotect = new wpuhtaccessprotect();
+
+if (defined('WP_CLI') && WP_CLI) {
+    WP_CLI::add_command('wpu-htaccess-protect-dump', function ($args = array()) {
+        $wpuhtaccessprotect = new wpuhtaccessprotect();
+        echo $wpuhtaccessprotect->rewrite_rules('');
+    }, array(
+        'shortdesc' => 'Dump WPU Htaccess protect rules',
+        'synopsis' => array()
+    ));
+    WP_CLI::add_command('wpu-htaccess-protect-update-rules', function ($args = array()) {
+        $wpuhtaccessprotect = new wpuhtaccessprotect();
+        $new_rules = $wpuhtaccessprotect->rewrite_rules('');
+        if (!$new_rules) {
+            WP_CLI::error('No rules are available');
+        }
+        $ht = ABSPATH . '/.htaccess';
+        if (!is_readable($ht)) {
+            WP_CLI::error('htaccess file is not available');
+        }
+        $ht_content = file_get_contents($ht);
+
+        preg_match('/# BEGIN WPU .htaccess Protect(.*)# END WPU .htaccess Protect/isU', $ht_content, $matches);
+        if (!isset($matches[0]) || !$matches[0]) {
+            WP_CLI::error('htaccess file does not contains the rules');
+        }
+        $ht_content = str_replace($matches[0], $new_rules, $ht_content);
+        file_put_contents($ht, $ht_content);
+        WP_CLI::success('Rules have been updated');
+
+    }, array(
+        'shortdesc' => 'Update WPU Htaccess protect rules directly in the .htaccess file',
+        'synopsis' => array()
+    ));
+}
