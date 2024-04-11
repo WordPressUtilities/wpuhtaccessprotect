@@ -6,18 +6,19 @@ Plugin Name: WPU htaccess Protect
 Plugin URI: https://github.com/WordPressUtilities/wpuhtaccessprotect
 Update URI: https://github.com/WordPressUtilities/wpuhtaccessprotect
 Description: Replicate htaccess admin protection on some files
-Version: 0.2.0
+Version: 0.2.1
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpuhtaccessprotect
 Requires at least: 6.2
 Requires PHP: 8.0
+Network: True
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
 
 class wpuhtaccessprotect {
-    private $plugin_version = '0.2.0';
+    private $plugin_version = '0.2.1';
     private $htpasswd_path = false;
     private $htaccess_authname = false;
     private $protected_files = array(
@@ -75,11 +76,12 @@ class wpuhtaccessprotect {
             $new_rules_part[] = '</Files>';
             $new_rules .= implode("\n", $new_rules_part) . "\n";
         }
-        $signature = "WPU .htaccess Protect v" . $this->plugin_version . "\n";
+        $signature_id = "WPU .htaccess Protect";
+        $signature = $signature_id . " v" . $this->plugin_version . "\n";
         return
             "# BEGIN " . $signature .
             $new_rules .
-            "# END " . $signature .
+            "# END " . $signature_id .
             $rules;
 
     }
